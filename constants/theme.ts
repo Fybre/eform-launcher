@@ -4,26 +4,73 @@
  */
 
 import { Platform } from 'react-native';
+import { ButtonColor } from '@/types/eform';
 
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
+const tintColorLight = '#007AFF';
+const tintColorDark = '#0A84FF';
+
+export const ButtonColors = {
+  light: {
+    blue: '#007AFF',
+    green: '#34C759',
+    purple: '#AF52DE',
+    orange: '#FF9500',
+    red: '#FF3B30',
+    pink: '#FF2D55',
+    teal: '#5AC8FA',
+  },
+  dark: {
+    blue: '#0A84FF',
+    green: '#30D158',
+    purple: '#BF5AF2',
+    orange: '#FF9F0A',
+    red: '#FF453A',
+    pink: '#FF375F',
+    teal: '#64D2FF',
+  },
+} as const;
+
+export function getButtonColor(color: ButtonColor | undefined, colorScheme: 'light' | 'dark'): string {
+  if (!color) {
+    return ButtonColors[colorScheme].blue;
+  }
+  return ButtonColors[colorScheme][color];
+}
 
 export const Colors = {
   light: {
-    text: '#11181C',
-    background: '#fff',
+    text: '#000000',
+    textSecondary: '#6B7280',
+    background: '#F9FAFB',
+    backgroundSecondary: '#FFFFFF',
     tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
+    icon: '#6B7280',
+    tabIconDefault: '#9CA3AF',
     tabIconSelected: tintColorLight,
+    border: '#E5E7EB',
+    card: '#FFFFFF',
+    cardBorder: '#E5E7EB',
+    danger: '#EF4444',
+    success: '#10B981',
+    primary: '#007AFF',
+    primaryText: '#FFFFFF',
   },
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
+    text: '#FFFFFF',
+    textSecondary: '#9CA3AF',
+    background: '#000000',
+    backgroundSecondary: '#1C1C1E',
     tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
+    icon: '#9CA3AF',
+    tabIconDefault: '#6B7280',
     tabIconSelected: tintColorDark,
+    border: '#374151',
+    card: '#1C1C1E',
+    cardBorder: '#374151',
+    danger: '#F87171',
+    success: '#34D399',
+    primary: '#0A84FF',
+    primaryText: '#FFFFFF',
   },
 };
 
