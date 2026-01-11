@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
-import { StyleSheet, ScrollView, Pressable, RefreshControl } from 'react-native';
+import { StyleSheet, ScrollView, Pressable, RefreshControl, View } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -16,6 +16,17 @@ export default function HomeScreen() {
   const [forms, setForms] = useState<EForm[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [appTitle, setAppTitle] = useState('eForm Launcher');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
+  const categories = useMemo(() => {
+    const uniqueCategories = new Set<string>();
+    forms.forEach(form => {
+      if (form.category) {
+        uniqueCategories.add(form.category);
+      }
+    });
+    return Array.from(uniqueCategories).sort();
+  }, [forms]);
 
   const sortedForms = useMemo(() => {
     return [...forms].sort((a, b) => {
@@ -24,6 +35,13 @@ export default function HomeScreen() {
       return orderA - orderB;
     });
   }, [forms]);
+
+  const filteredForms = useMemo(() => {
+    if (!selectedCategory) {
+      return sortedForms;
+    }
+    return sortedForms.filter(form => form.category === selectedCategory);
+  }, [sortedForms, selectedCategory]);
 
   const loadForms = async () => {
     const loadedForms = await storageUtils.getEForms();
@@ -56,6 +74,7 @@ export default function HomeScreen() {
         url: form.url,
         name: form.name,
         successPattern: form.successRedirectPattern,
+        formId: form.id,
       },
     });
   };
@@ -74,6 +93,51 @@ export default function HomeScreen() {
         </ThemedText>
       </ThemedView>
 
+      {categories.length > 0 && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={[styles.categoryFilter, { backgroundColor: colors.backgroundSecondary }]}
+          contentContainerStyle={styles.categoryFilterContent}
+        >
+          <Pressable
+            style={[
+              styles.categoryButton,
+              { borderColor: colors.border, backgroundColor: colors.backgroundSecondary },
+              selectedCategory === null && { backgroundColor: colors.primary, borderColor: colors.primary },
+            ]}
+            onPress={() => setSelectedCategory(null)}
+          >
+            <ThemedText style={[
+              styles.categoryButtonText,
+              { color: colors.text },
+              selectedCategory === null && { color: colors.primaryText },
+            ]}>
+              All
+            </ThemedText>
+          </Pressable>
+          {categories.map((category) => (
+            <Pressable
+              key={category}
+              style={[
+                styles.categoryButton,
+                { borderColor: colors.border, backgroundColor: colors.backgroundSecondary },
+                selectedCategory === category && { backgroundColor: colors.primary, borderColor: colors.primary },
+              ]}
+              onPress={() => setSelectedCategory(category)}
+            >
+              <ThemedText style={[
+                styles.categoryButtonText,
+                { color: colors.text },
+                selectedCategory === category && { color: colors.primaryText },
+              ]}>
+                {category}
+              </ThemedText>
+            </Pressable>
+          ))}
+        </ScrollView>
+      )}
+
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -81,7 +145,7 @@ export default function HomeScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        {sortedForms.map((form) => (
+        {filteredForms.map((form) => (
           <Pressable
             key={form.id}
             style={({ pressed }) => [
@@ -126,6 +190,25 @@ const styles = StyleSheet.create({
   subtitle: {
     marginTop: 8,
     fontSize: 15,
+  },
+  categoryFilter: {
+    maxHeight: 60,
+    borderBottomWidth: 1,
+  },
+  categoryFilterContent: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 8,
+  },
+  categoryButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  categoryButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
   },
   scrollView: {
     flex: 1,

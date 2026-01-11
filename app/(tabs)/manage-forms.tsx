@@ -21,6 +21,7 @@ export default function ManageFormsScreen() {
     successRedirectPattern: '',
     description: '',
     color: 'blue' as ButtonColor,
+    category: '',
   });
 
   const sortedForms = useMemo(() => {
@@ -58,12 +59,13 @@ export default function ManageFormsScreen() {
       successRedirectPattern: newForm.successRedirectPattern.trim(),
       description: newForm.description.trim() || undefined,
       color: newForm.color,
+      category: newForm.category.trim() || undefined,
       order: maxOrder + 1,
     };
 
     try {
       await storageUtils.addEForm(form);
-      setNewForm({ name: '', url: '', successRedirectPattern: '', description: '', color: 'blue' });
+      setNewForm({ name: '', url: '', successRedirectPattern: '', description: '', color: 'blue', category: '' });
       setIsAdding(false);
       loadForms();
       Alert.alert('Success', 'Form added successfully');
@@ -80,6 +82,7 @@ export default function ManageFormsScreen() {
       successRedirectPattern: form.successRedirectPattern,
       description: form.description || '',
       color: form.color || 'blue',
+      category: form.category || '',
     });
     setIsAdding(false);
   };
@@ -99,8 +102,9 @@ export default function ManageFormsScreen() {
         successRedirectPattern: newForm.successRedirectPattern.trim(),
         description: newForm.description.trim() || undefined,
         color: newForm.color,
+        category: newForm.category.trim() || undefined,
       });
-      setNewForm({ name: '', url: '', successRedirectPattern: '', description: '', color: 'blue' });
+      setNewForm({ name: '', url: '', successRedirectPattern: '', description: '', color: 'blue', category: '' });
       setEditingId(null);
       loadForms();
       Alert.alert('Success', 'Form updated successfully');
@@ -112,7 +116,7 @@ export default function ManageFormsScreen() {
   const handleCancelEdit = () => {
     setEditingId(null);
     setIsAdding(false);
-    setNewForm({ name: '', url: '', successRedirectPattern: '', description: '', color: 'blue' });
+    setNewForm({ name: '', url: '', successRedirectPattern: '', description: '', color: 'blue', category: '' });
   };
 
   const handleMoveUp = async (form: EForm) => {
@@ -243,6 +247,18 @@ export default function ManageFormsScreen() {
                   multiline
                 />
 
+                <TextInput
+                  style={[styles.input, {
+                    borderColor: colors.border,
+                    backgroundColor: colors.backgroundSecondary,
+                    color: colors.text,
+                  }]}
+                  placeholder="Category (optional, e.g., HR, Finance)"
+                  placeholderTextColor={colors.textSecondary}
+                  value={newForm.category}
+                  onChangeText={(text) => setNewForm({ ...newForm, category: text })}
+                />
+
                 <ThemedText style={[styles.colorLabel, { color: colors.text }]}>Button Color:</ThemedText>
                 <View style={styles.colorOptions}>
                   {colorOptions.map((colorOption) => (
@@ -318,6 +334,15 @@ export default function ManageFormsScreen() {
                 <View style={styles.formPatternRow}>
                   <ThemedText style={[styles.formPattern, { color: colors.textSecondary }]}>
                     Success: {form.successRedirectPattern}
+                  </ThemedText>
+                </View>
+              )}
+
+              {/* Category Row */}
+              {form.category && (
+                <View style={styles.formCategoryRow}>
+                  <ThemedText style={[styles.formCategory, { color: colors.primary }]}>
+                    {form.category}
                   </ThemedText>
                 </View>
               )}
@@ -435,6 +460,18 @@ export default function ManageFormsScreen() {
               multiline
             />
 
+            <TextInput
+              style={[styles.input, {
+                borderColor: colors.border,
+                backgroundColor: colors.backgroundSecondary,
+                color: colors.text,
+              }]}
+              placeholder="Category (optional, e.g., HR, Finance)"
+              placeholderTextColor={colors.textSecondary}
+              value={newForm.category}
+              onChangeText={(text) => setNewForm({ ...newForm, category: text })}
+            />
+
             <ThemedText style={[styles.colorLabel, { color: colors.text }]}>Button Color:</ThemedText>
             <View style={styles.colorOptions}>
               {colorOptions.map((colorOption) => (
@@ -550,6 +587,13 @@ const styles = StyleSheet.create({
     fontSize: 12,
     opacity: 0.6,
     lineHeight: 16,
+  },
+  formCategoryRow: {
+    marginBottom: 12,
+  },
+  formCategory: {
+    fontSize: 12,
+    fontWeight: '600',
   },
   actionButtonsRow: {
     flexDirection: 'row',

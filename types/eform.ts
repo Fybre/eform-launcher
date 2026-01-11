@@ -8,6 +8,7 @@ export interface EForm {
   description?: string;
   color?: ButtonColor;
   order?: number;
+  category?: string; // Optional category for grouping forms
 }
 
 export type ThemeMode = 'light' | 'dark' | 'system';
@@ -20,4 +21,13 @@ export interface AppSettings {
 export interface EFormConfig {
   forms: EForm[];
   settings?: AppSettings;
+  history?: FormSubmission[];
+}
+
+export interface FormSubmission {
+  id: string;
+  formId: string;
+  formName: string;
+  timestamp: number;
+  url: string;
 }

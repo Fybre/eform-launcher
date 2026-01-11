@@ -1,14 +1,16 @@
 import { useState, useCallback } from 'react';
 import { StyleSheet, ScrollView, Pressable, Alert, TextInput, View, ActivityIndicator } from 'react-native';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { storageUtils } from '@/utils/storage';
 import { ThemeMode, EForm } from '@/types/eform';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useThemeColors } from '@/hooks/use-theme-colors';
+import * as Clipboard from 'expo-clipboard';
 
 export default function SettingsScreen() {
+  const router = useRouter();
   const { themeMode, setThemeMode } = useTheme();
   const colors = useThemeColors();
   const [appTitle, setAppTitle] = useState('eForm Launcher');
@@ -152,6 +154,72 @@ export default function SettingsScreen() {
     }
   };
 
+  const handleExportConfig = async () => {
+    try {
+      const configJson = await storageUtils.exportConfig();
+      await Clipboard.setStringAsync(configJson);
+      Alert.alert(
+        'Success',
+        'Configuration copied to clipboard! You can now paste it into a file or share it.'
+      );
+    } catch (error) {
+      Alert.alert('Error', 'Failed to export configuration');
+    }
+  };
+
+  const handleImportConfig = async () => {
+    try {
+      const configJson = await Clipboard.getStringAsync();
+
+      if (!configJson || configJson.trim() === '') {
+        Alert.alert('Error', 'Clipboard is empty. Please copy a configuration JSON first.');
+        return;
+      }
+
+      // Validate JSON
+      const config = JSON.parse(configJson);
+      if (!config.forms || !Array.isArray(config.forms)) {
+        throw new Error('Invalid configuration format');
+      }
+
+      const existingForms = await storageUtils.getEForms();
+
+      if (existingForms.length > 0) {
+        Alert.alert(
+          'Import Configuration',
+          `This will import ${config.forms.length} form(s), ${config.history?.length || 0} history record(s). You currently have ${existingForms.length} form(s).`,
+          [
+            { text: 'Cancel', style: 'cancel' },
+            {
+              text: 'Replace All',
+              style: 'destructive',
+              onPress: async () => {
+                await storageUtils.importConfig(configJson, 'replace');
+                await loadData();
+                Alert.alert('Success', 'Configuration imported successfully (replaced)');
+              },
+            },
+            {
+              text: 'Merge',
+              onPress: async () => {
+                await storageUtils.importConfig(configJson, 'merge');
+                await loadData();
+                Alert.alert('Success', 'Configuration imported successfully (merged)');
+              },
+            },
+          ]
+        );
+      } else {
+        await storageUtils.importConfig(configJson, 'replace');
+        await loadData();
+        Alert.alert('Success', 'Configuration imported successfully');
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      Alert.alert('Error', `Failed to import configuration: ${errorMessage}`);
+    }
+  };
+
   return (
     <ThemedView style={[styles.container, { backgroundColor: colors.background }]}>
       <ThemedView style={[styles.header, {
@@ -258,6 +326,48 @@ export default function SettingsScreen() {
                 Load Forms
               </ThemedText>
             )}
+          </Pressable>
+        </ThemedView>
+
+        {/* Export/Import Section */}
+        <ThemedView style={[styles.section, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+          <ThemedText type="subtitle" style={[styles.sectionTitle, { color: colors.text }]}>Backup & Restore</ThemedText>
+          <ThemedText style={[styles.sectionDescription, { color: colors.textSecondary }]}>
+            Export configuration to clipboard, or import from clipboard
+          </ThemedText>
+          <View style={styles.exportImportButtons}>
+            <Pressable
+              style={[styles.exportButton, { backgroundColor: colors.primary, borderColor: colors.primary }]}
+              onPress={handleExportConfig}
+            >
+              <ThemedText style={[styles.exportButtonText, { color: colors.primaryText }]}>
+                Export Configuration
+              </ThemedText>
+            </Pressable>
+            <Pressable
+              style={[styles.importButton, { borderColor: colors.primary, backgroundColor: colors.backgroundSecondary }]}
+              onPress={handleImportConfig}
+            >
+              <ThemedText style={[styles.importButtonText, { color: colors.primary }]}>
+                Import Configuration
+              </ThemedText>
+            </Pressable>
+          </View>
+        </ThemedView>
+
+        {/* History Section */}
+        <ThemedView style={[styles.section, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+          <ThemedText type="subtitle" style={[styles.sectionTitle, { color: colors.text }]}>Submission History</ThemedText>
+          <ThemedText style={[styles.sectionDescription, { color: colors.textSecondary }]}>
+            View all form submissions and track your activity
+          </ThemedText>
+          <Pressable
+            style={[styles.historyButton, { backgroundColor: colors.primary, borderColor: colors.primary }]}
+            onPress={() => router.push('/history')}
+          >
+            <ThemedText style={[styles.historyButtonText, { color: colors.primaryText }]}>
+              View History
+            </ThemedText>
           </Pressable>
         </ThemedView>
 
@@ -424,6 +534,45 @@ const styles = StyleSheet.create({
   },
   loadButtonText: {
     fontSize: 16,
+    fontWeight: '600',
+  },
+  exportImportButtons: {
+    gap: 12,
+  },
+  exportButton: {
+    padding: 14,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 48,
+    borderWidth: 2,
+  },
+  exportButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  importButton: {
+    padding: 14,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 48,
+    borderWidth: 2,
+  },
+  importButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  historyButton: {
+    padding: 14,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 48,
+    marginTop: 12,
+  },
+  historyButtonText: {
+    fontSize: 15,
     fontWeight: '600',
   },
 });

@@ -1,8 +1,10 @@
 import { ThemedView } from "@/components/themed-view";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ActivityIndicator, Alert, StyleSheet, View } from "react-native";
 import { WebView, WebViewNavigation } from "react-native-webview";
+import NetInfo from "@react-native-community/netinfo";
+import { storageUtils } from "@/utils/storage";
 
 export default function WebViewScreen() {
   const router = useRouter();
@@ -10,16 +12,48 @@ export default function WebViewScreen() {
     url: string;
     name: string;
     successPattern: string;
+    formId: string;
   }>();
 
   const [loading, setLoading] = useState(true);
   const [currentUrl, setCurrentUrl] = useState(params.url);
 
-  const handleNavigationStateChange = (navState: WebViewNavigation) => {
+  useEffect(() => {
+    const checkNetworkConnection = async () => {
+      const state = await NetInfo.fetch();
+      if (!state.isConnected) {
+        Alert.alert(
+          "No Internet Connection",
+          "You are offline. Please check your internet connection and try again.",
+          [
+            {
+              text: "Go Back",
+              onPress: () => router.back(),
+            },
+            {
+              text: "Try Anyway",
+              style: "cancel",
+            },
+          ]
+        );
+      }
+    };
+
+    checkNetworkConnection();
+  }, []);
+
+  const handleNavigationStateChange = async (navState: WebViewNavigation) => {
     setCurrentUrl(navState.url);
 
     // Check if the URL matches the success redirect pattern
     if (params.successPattern && navState.url.includes(params.successPattern)) {
+      // Log the submission to history
+      try {
+        await storageUtils.addSubmission(params.formId, params.name, navState.url);
+      } catch (error) {
+        console.error("Failed to log submission:", error);
+      }
+
       // Form was submitted successfully
       Alert.alert("Success", "Form submitted successfully!", [
         {
