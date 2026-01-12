@@ -1,13 +1,18 @@
-import { useState, useCallback, useMemo } from 'react';
-import { StyleSheet, ScrollView, Pressable, RefreshControl, View } from 'react-native';
-import { useRouter, useFocusEffect } from 'expo-router';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { storageUtils } from '@/utils/storage';
-import { EForm } from '@/types/eform';
-import { useThemeColors } from '@/hooks/use-theme-colors';
-import { useTheme } from '@/contexts/ThemeContext';
-import { getButtonColor } from '@/constants/theme';
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
+import { getButtonColor } from "@/constants/theme";
+import { useTheme } from "@/contexts/ThemeContext";
+import { useThemeColors } from "@/hooks/use-theme-colors";
+import { EForm } from "@/types/eform";
+import { storageUtils } from "@/utils/storage";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useMemo, useState } from "react";
+import {
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+} from "react-native";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -15,12 +20,12 @@ export default function HomeScreen() {
   const { effectiveColorScheme } = useTheme();
   const [forms, setForms] = useState<EForm[]>([]);
   const [refreshing, setRefreshing] = useState(false);
-  const [appTitle, setAppTitle] = useState('eForm Launcher');
+  const [appTitle, setAppTitle] = useState("eForm Launcher");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const categories = useMemo(() => {
     const uniqueCategories = new Set<string>();
-    forms.forEach(form => {
+    forms.forEach((form) => {
       if (form.category) {
         uniqueCategories.add(form.category);
       }
@@ -40,7 +45,7 @@ export default function HomeScreen() {
     if (!selectedCategory) {
       return sortedForms;
     }
-    return sortedForms.filter(form => form.category === selectedCategory);
+    return sortedForms.filter((form) => form.category === selectedCategory);
   }, [sortedForms, selectedCategory]);
 
   const loadForms = async () => {
@@ -69,7 +74,7 @@ export default function HomeScreen() {
 
   const handleFormPress = (form: EForm) => {
     router.push({
-      pathname: '/webview',
+      pathname: "/webview",
       params: {
         url: form.url,
         name: form.name,
@@ -80,16 +85,25 @@ export default function HomeScreen() {
   };
 
   return (
-    <ThemedView style={[styles.container, { backgroundColor: colors.background }]}>
-      <ThemedView style={[styles.header, {
-        backgroundColor: colors.backgroundSecondary,
-        borderBottomColor: colors.border
-      }]}>
-        <ThemedText type="title" style={{ color: colors.text }}>{appTitle}</ThemedText>
+    <ThemedView
+      style={[styles.container, { backgroundColor: colors.background }]}
+    >
+      <ThemedView
+        style={[
+          styles.header,
+          {
+            backgroundColor: colors.backgroundSecondary,
+            borderBottomColor: colors.border,
+          },
+        ]}
+      >
+        <ThemedText type="title" style={{ color: colors.text }}>
+          {appTitle}
+        </ThemedText>
         <ThemedText style={[styles.subtitle, { color: colors.textSecondary }]}>
           {forms.length === 0
-            ? 'No forms configured. Go to Settings to add forms.'
-            : 'Select a form to fill out'}
+            ? "No forms configured. Go to Manage to add forms."
+            : "Select a form to fill out"}
         </ThemedText>
       </ThemedView>
 
@@ -97,22 +111,33 @@ export default function HomeScreen() {
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          style={[styles.categoryFilter, { backgroundColor: colors.backgroundSecondary }]}
+          style={[
+            styles.categoryFilter,
+            { backgroundColor: colors.backgroundSecondary },
+          ]}
           contentContainerStyle={styles.categoryFilterContent}
         >
           <Pressable
             style={[
               styles.categoryButton,
-              { borderColor: colors.border, backgroundColor: colors.backgroundSecondary },
-              selectedCategory === null && { backgroundColor: colors.primary, borderColor: colors.primary },
+              {
+                borderColor: colors.border,
+                backgroundColor: colors.backgroundSecondary,
+              },
+              selectedCategory === null && {
+                backgroundColor: colors.primary,
+                borderColor: colors.primary,
+              },
             ]}
             onPress={() => setSelectedCategory(null)}
           >
-            <ThemedText style={[
-              styles.categoryButtonText,
-              { color: colors.text },
-              selectedCategory === null && { color: colors.primaryText },
-            ]}>
+            <ThemedText
+              style={[
+                styles.categoryButtonText,
+                { color: colors.text },
+                selectedCategory === null && { color: colors.primaryText },
+              ]}
+            >
               All
             </ThemedText>
           </Pressable>
@@ -121,16 +146,26 @@ export default function HomeScreen() {
               key={category}
               style={[
                 styles.categoryButton,
-                { borderColor: colors.border, backgroundColor: colors.backgroundSecondary },
-                selectedCategory === category && { backgroundColor: colors.primary, borderColor: colors.primary },
+                {
+                  borderColor: colors.border,
+                  backgroundColor: colors.backgroundSecondary,
+                },
+                selectedCategory === category && {
+                  backgroundColor: colors.primary,
+                  borderColor: colors.primary,
+                },
               ]}
               onPress={() => setSelectedCategory(category)}
             >
-              <ThemedText style={[
-                styles.categoryButtonText,
-                { color: colors.text },
-                selectedCategory === category && { color: colors.primaryText },
-              ]}>
+              <ThemedText
+                style={[
+                  styles.categoryButtonText,
+                  { color: colors.text },
+                  selectedCategory === category && {
+                    color: colors.primaryText,
+                  },
+                ]}
+              >
                 {category}
               </ThemedText>
             </Pressable>
@@ -151,18 +186,29 @@ export default function HomeScreen() {
             style={({ pressed }) => [
               styles.formButton,
               {
-                backgroundColor: getButtonColor(form.color, effectiveColorScheme),
+                backgroundColor: getButtonColor(
+                  form.color,
+                  effectiveColorScheme
+                ),
                 shadowColor: colors.text,
               },
               pressed && styles.formButtonPressed,
             ]}
             onPress={() => handleFormPress(form)}
           >
-            <ThemedText type="subtitle" style={[styles.formButtonTitle, { color: colors.primaryText }]}>
+            <ThemedText
+              type="subtitle"
+              style={[styles.formButtonTitle, { color: colors.primaryText }]}
+            >
               {form.name}
             </ThemedText>
             {form.description && (
-              <ThemedText style={[styles.formButtonDescription, { color: colors.primaryText }]}>
+              <ThemedText
+                style={[
+                  styles.formButtonDescription,
+                  { color: colors.primaryText },
+                ]}
+              >
                 {form.description}
               </ThemedText>
             )}
@@ -181,7 +227,7 @@ const styles = StyleSheet.create({
     padding: 24,
     paddingTop: 60,
     borderBottomWidth: 1,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 3,
@@ -208,7 +254,7 @@ const styles = StyleSheet.create({
   },
   categoryButtonText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   scrollView: {
     flex: 1,
@@ -221,13 +267,13 @@ const styles = StyleSheet.create({
     padding: 24,
     borderRadius: 16,
     marginBottom: 4,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 3,
     minHeight: 80,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   formButtonPressed: {
     opacity: 0.8,
@@ -236,7 +282,7 @@ const styles = StyleSheet.create({
   formButtonTitle: {
     marginBottom: 6,
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   formButtonDescription: {
     fontSize: 14,

@@ -70,6 +70,7 @@ export default function WebViewScreen() {
         options={{
           title: params.name,
           headerShown: true,
+          headerBackTitle: "Back",
         }}
       />
       <ThemedView style={styles.container}>
